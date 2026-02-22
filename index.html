@@ -138,62 +138,114 @@ button:active{
 <script>
 const inputs = ["v1","v2","v3"];
 
+/* TABLA DE CORRECCIÓN */
+const tablaCorreccion = [
+  {min:30, max:50, corr:14},
+  {min:50, max:70, corr:15},
+  {min:70, max:90, corr:15},
+  {min:90, max:100, corr:15},
+  {min:100, max:200, corr:15},
+  {min:200, max:300, corr:15},
+  {min:300, max:400, corr:10},
+  {min:400, max:500, corr:0},
+  {min:500, max:600, corr:-5},
+  {min:600, max:700, corr:-10},
+  {min:700, max:800, corr:-15},
+  {min:800, max:900, corr:-20},
+  {min:900, max:1000, corr:-25},
+  {min:1000, max:1200, corr:-30},
+  {min:1200, max:1400, corr:-35},
+  {min:1400, max:1600, corr:-45},
+  {min:1600, max:1800, corr:-55},
+  {min:1800, max:2000, corr:-60},
+  {min:2000, max:2200, corr:-65},
+  {min:2200, max:2400, corr:-75},
+  {min:2400, max:2600, corr:-90},
+  {min:2600, max:2800, corr:-100},
+  {min:2800, max:3000, corr:-110},
+  {min:3000, max:3200, corr:-120},
+  {min:3200, max:3400, corr:-135},
+  {min:3400, max:3600, corr:-150},
+  {min:3600, max:3800, corr:-165},
+  {min:3800, max:4000, corr:-175},
+  {min:4000, max:4200, corr:-180},
+  {min:4200, max:4400, corr:-190},
+  {min:4400, max:4600, corr:-195},
+  {min:4600, max:4800, corr:-200},
+  {min:4800, max:5000, corr:-225}
+];
+
 inputs.forEach(id=>{
-    document.getElementById(id).addEventListener("input", calcular);
+  document.getElementById(id).addEventListener("input", calcular);
 });
+
+function obtenerCorreccion(valor){
+  for(let r of tablaCorreccion){
+    if(valor >= r.min && valor < r.max){
+      return r.corr;
+    }
+  }
+  return 0;
+}
 
 function calcular(){
 
-    let valores = inputs
-        .map(id => parseFloat(document.getElementById(id).value))
-        .filter(v => !isNaN(v));
+  let valoresOriginales = inputs
+    .map(id => parseFloat(document.getElementById(id).value))
+    .filter(v => !isNaN(v));
 
-    // Si no hay datos → limpiar todo
-    if(valores.length === 0){
-        limpiarResultados();
-        return;
+  if(valoresOriginales.length === 0){
+    limpiarResultados();
+    return;
+  }
+
+  let valoresCorregidos = [];
+
+  inputs.forEach((id,index)=>{
+    let valor = parseFloat(document.getElementById(id).value);
+    let celda = document.getElementById("c"+(index+1));
+
+    if(!isNaN(valor)){
+      let correccion = obtenerCorreccion(valor);
+      let corregido = valor + correccion;
+      valoresCorregidos.push(corregido);
+      celda.textContent = corregido.toFixed(2);
+    } else {
+      celda.textContent = "";
     }
+  });
 
-    let promedio = valores.reduce((a,b)=>a+b,0) / valores.length;
+  if(valoresCorregidos.length === 0){
+    limpiarResultados();
+    return;
+  }
 
-    // Calcular corregidos respetando posiciones
-    inputs.forEach((id,index)=>{
-        let valor = parseFloat(document.getElementById(id).value);
-        let celda = document.getElementById("c"+(index+1));
+  let promedio = valoresCorregidos.reduce((a,b)=>a+b,0) / valoresCorregidos.length;
 
-        if(!isNaN(valor)){
-            celda.textContent = (valor - promedio).toFixed(2);
-        } else {
-            celda.textContent = "";
-        }
-    });
+  let suma = valoresCorregidos
+    .map(v => Math.pow(v - promedio,2))
+    .reduce((a,b)=>a+b,0);
 
-    // Sigma
-    let suma = valores
-        .map(v => Math.pow(v - promedio,2))
-        .reduce((a,b)=>a+b,0);
+  let sigma = Math.sqrt(suma / valoresCorregidos.length);
+  let cv = promedio !== 0 ? (sigma/promedio)*100 : 0;
 
-    let sigma = Math.sqrt(suma / valores.length);
-
-    let cv = promedio !== 0 ? (sigma/promedio)*100 : 0;
-
-    document.getElementById("vprom").textContent = promedio.toFixed(2);
-    document.getElementById("sigma").textContent = sigma.toFixed(2);
-    document.getElementById("cv").textContent = cv.toFixed(2);
+  document.getElementById("vprom").textContent = promedio.toFixed(2);
+  document.getElementById("sigma").textContent = sigma.toFixed(2);
+  document.getElementById("cv").textContent = cv.toFixed(2);
 }
 
 function limpiarResultados(){
-    ["c1","c2","c3","vprom","sigma","cv"].forEach(id=>{
-        document.getElementById(id).textContent = "";
-    });
+  ["c1","c2","c3","vprom","sigma","cv"].forEach(id=>{
+    document.getElementById(id).textContent = "";
+  });
 }
 
-// Registrar Service Worker
 if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("service-worker.js");
+  navigator.serviceWorker.register("service-worker.js");
 }
 </script>
 
 </body>
 </html>
+
 
