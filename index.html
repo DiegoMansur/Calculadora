@@ -136,32 +136,59 @@ button:active{
 </div>
 
 <script>
+const inputs = ["v1","v2","v3"];
+
+inputs.forEach(id=>{
+    document.getElementById(id).addEventListener("input", calcular);
+});
+
 function calcular(){
 
-    let v1=parseFloat(document.getElementById("v1").value)||0;
-    let v2=parseFloat(document.getElementById("v2").value)||0;
-    let v3=parseFloat(document.getElementById("v3").value)||0;
+    let valores = inputs
+        .map(id => parseFloat(document.getElementById(id).value))
+        .filter(v => !isNaN(v));
 
-    let valores=[v1,v2,v3];
+    // Si no hay datos → limpiar todo
+    if(valores.length === 0){
+        limpiarResultados();
+        return;
+    }
 
-    let promedio=(v1+v2+v3)/3;
+    let promedio = valores.reduce((a,b)=>a+b,0) / valores.length;
 
-    let corregidos=valores.map(v=>v-promedio);
+    // Calcular corregidos respetando posiciones
+    inputs.forEach((id,index)=>{
+        let valor = parseFloat(document.getElementById(id).value);
+        let celda = document.getElementById("c"+(index+1));
 
-    let suma=corregidos.reduce((acc,v)=>acc+Math.pow(v,2),0);
-    let sigma=Math.sqrt(suma/3);
+        if(!isNaN(valor)){
+            celda.textContent = (valor - promedio).toFixed(2);
+        } else {
+            celda.textContent = "";
+        }
+    });
+
+    // Sigma
+    let suma = valores
+        .map(v => Math.pow(v - promedio,2))
+        .reduce((a,b)=>a+b,0);
+
+    let sigma = Math.sqrt(suma / valores.length);
 
     let cv = promedio !== 0 ? (sigma/promedio)*100 : 0;
 
-    document.getElementById("c1").textContent=corregidos[0].toFixed(2);
-    document.getElementById("c2").textContent=corregidos[1].toFixed(2);
-    document.getElementById("c3").textContent=corregidos[2].toFixed(2);
-
-    document.getElementById("vprom").textContent=promedio.toFixed(2);
-    document.getElementById("sigma").textContent=sigma.toFixed(2);
-    document.getElementById("cv").textContent=cv.toFixed(2);
+    document.getElementById("vprom").textContent = promedio.toFixed(2);
+    document.getElementById("sigma").textContent = sigma.toFixed(2);
+    document.getElementById("cv").textContent = cv.toFixed(2);
 }
 
+function limpiarResultados(){
+    ["c1","c2","c3","vprom","sigma","cv"].forEach(id=>{
+        document.getElementById(id).textContent = "";
+    });
+}
+
+// Registrar Service Worker
 if("serviceWorker" in navigator){
     navigator.serviceWorker.register("service-worker.js");
 }
@@ -169,3 +196,4 @@ if("serviceWorker" in navigator){
 
 </body>
 </html>
+
