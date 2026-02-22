@@ -5,126 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Anemometría</title>
 
+<link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b5e20">
-<link rel="apple-touch-icon" href="icon.png">
-
-<style>
-body{
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background:#f5f5f5;
-    padding:20px;
-    text-align:center;
-}
-.container{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-input{
-    width:80%;
-    padding:10px;
-    margin:8px;
-    font-size:18px;
-    text-align:center;
-}
-button{
-    background:#1b5e20;
-    color:white;
-    border:none;
-    padding:12px;
-    width:90%;
-    font-size:18px;
-    border-radius:8px;
-    margin-top:10px;
-}
-.result{
-    margin-top:15px;
-    font-weight:bold;
-    font-size:18px;
-}
-.alert{
-    margin-top:10px;
-    font-size:16px;
-}
-</style>
 </head>
 
 <body>
-<div class="container">
+
+<div class="app">
+
 <h2>Control de Anemometría</h2>
 
-<input type="number" id="v1" placeholder="Velocidad 1">
-<input type="number" id="v2" placeholder="Velocidad 2">
-<input type="number" id="v3" placeholder="Velocidad 3">
+<div class="tabla-card">
 
-<button onclick="calcular()">REALIZAR CÁLCULOS</button>
+<div class="fila encabezado">
+    <div>Velocidad (f/min)</div>
+</div>
 
-<div class="result" id="vprom"></div>
-<div class="result" id="sigma"></div>
-<div class="result" id="cv"></div>
-<div class="alert" id="alerta"></div>
+<div class="fila sub-encabezado">
+    <div>Antes corrección</div>
+    <div>Corregido</div>
+</div>
+
+<div class="fila">
+    <input type="number" id="v1" placeholder="Valor 1">
+    <input type="number" id="c1" placeholder="—">
+</div>
+
+<div class="fila">
+    <input type="number" id="v2" placeholder="Valor 2">
+    <input type="number" id="c2" placeholder="—">
+</div>
+
+<div class="fila">
+    <input type="number" id="v3" placeholder="Valor 3">
+    <input type="number" id="c3" placeholder="—">
+</div>
+
+<div class="resultados">
+    <div class="box" id="vprom">VPROM<br>0.00</div>
+    <div class="box" id="sigma">σ<br>0.0000</div>
+    <div class="box" id="cv">CV<br>0.00%</div>
+</div>
 
 </div>
 
-<script>
-const TABLA = [
-[30,14],[50,15],[70,15],[90,15],[100,15],[200,15],[300,10],
-[400,0],[500,-5],[600,-10],[700,-15],[800,-20],[900,-25],
-[1000,-30],[1200,-35],[1400,-45],[1600,-55],[1800,-60],
-[2000,-65],[2200,-75],[2400,-90],[2600,-100],[2800,-110],
-[3000,-120],[3200,-135],[3400,-150],[3600,-165],[3800,-175],
-[4000,-180],[4200,-190],[4400,-195],[4600,-200],[4800,-225],
-[5000,-260]
-];
+<button onclick="calcular()">Realizar cálculos</button>
 
-function obtenerAjuste(valor){
-    let ajuste = 0;
-    for(let i=0;i<TABLA.length;i++){
-        if(valor >= TABLA[i][0]){
-            ajuste = TABLA[i][1];
-        }else{
-            break;
-        }
-    }
-    return ajuste;
-}
+<div class="mensaje" id="mensaje"></div>
 
-function calcular(){
-    let valores = [
-        parseFloat(document.getElementById("v1").value || 0),
-        parseFloat(document.getElementById("v2").value || 0),
-        parseFloat(document.getElementById("v3").value || 0)
-    ];
+</div>
 
-    let corregidas = valores.map(v => v + obtenerAjuste(v));
-
-    let vprom = (corregidas[0]+corregidas[1]+corregidas[2])/3;
-
-    let suma = corregidas.reduce((acc,v)=>acc+Math.pow(v-vprom,2),0);
-    let sigma = Math.sqrt(suma/3);
-
-    let cv = vprom !== 0 ? sigma/vprom : 0;
-
-    document.getElementById("vprom").innerHTML = "VPROM: " + vprom.toFixed(2);
-    document.getElementById("sigma").innerHTML = "σ: " + sigma.toFixed(4);
-    document.getElementById("cv").innerHTML = "CV: " + (cv*100).toFixed(2) + "%";
-
-    let alerta = document.getElementById("alerta");
-    if(cv > 0.05){
-        alerta.innerHTML = "REPETIR: CV > 5%";
-        alerta.style.color = "#d32f2f";
-    }else{
-        alerta.innerHTML = "LECTURA VÁLIDA";
-        alerta.style.color = "#2e7d32";
-    }
-}
-
-if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("service-worker.js");
-}
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
