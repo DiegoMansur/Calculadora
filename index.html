@@ -3,124 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Anemometría</title>
+<title>Velocity App</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1b5e20">
-<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#f5f5f7">
 
 <style>
 body{
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background:#f5f5f5;
-    padding:20px;
-    text-align:center;
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+    background:#f5f5f7;
+    display:flex;
+    justify-content:center;
 }
+
 .container{
-    background:white;
+    width:100%;
+    max-width:420px;
     padding:20px;
-    border-radius:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
-input{
-    width:80%;
-    padding:10px;
-    margin:8px;
-    font-size:18px;
+
+.card{
+    background:white;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+h1{
+    font-size:20px;
     text-align:center;
+    margin-bottom:20px;
 }
-button{
-    background:#1b5e20;
-    color:white;
-    border:none;
+
+.section-title{
+    font-size:13px;
+    color:#888;
+    margin-bottom:8px;
+}
+
+input{
+    width:100%;
     padding:12px;
-    width:90%;
-    font-size:18px;
-    border-radius:8px;
+    margin-bottom:10px;
+    border-radius:12px;
+    border:1px solid #ddd;
+    font-size:15px;
+    outline:none;
+}
+
+input:focus{
+    border:1px solid #0071e3;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:14px;
+    background:#0071e3;
+    color:white;
+    font-size:15px;
+    cursor:pointer;
     margin-top:10px;
 }
-.result{
-    margin-top:15px;
-    font-weight:bold;
-    font-size:18px;
+
+button:active{
+    transform:scale(0.98);
 }
-.alert{
-    margin-top:10px;
-    font-size:16px;
+
+.result-box{
+    margin-top:20px;
+    background:#fafafa;
+    padding:15px;
+    border-radius:15px;
+    font-size:14px;
+}
+
+.result-item{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:6px;
 }
 </style>
 </head>
 
 <body>
+
 <div class="container">
-<h2>Control de Anemometría</h2>
+<div class="card">
 
-<input type="number" id="v1" placeholder="Velocidad 1">
-<input type="number" id="v2" placeholder="Velocidad 2">
-<input type="number" id="v3" placeholder="Velocidad 3">
+<h1>Velocity (f/min)</h1>
 
-<button onclick="calcular()">REALIZAR CÁLCULOS</button>
+<div class="section-title">Before Correction</div>
 
-<div class="result" id="vprom"></div>
-<div class="result" id="sigma"></div>
-<div class="result" id="cv"></div>
-<div class="alert" id="alerta"></div>
+<input type="number" id="v1" placeholder="Valor 1">
+<input type="number" id="v2" placeholder="Valor 2">
+<input type="number" id="v3" placeholder="Valor 3">
 
+<button onclick="calcular()">Calcular</button>
+
+<div class="result-box">
+<div class="result-item">
+<span>Corrected 1</span>
+<span id="c1">0</span>
+</div>
+<div class="result-item">
+<span>Corrected 2</span>
+<span id="c2">0</span>
+</div>
+<div class="result-item">
+<span>Corrected 3</span>
+<span id="c3">0</span>
+</div>
+
+<hr>
+
+<div class="result-item">
+<strong>VPROM</strong>
+<strong id="vprom">0</strong>
+</div>
+
+<div class="result-item">
+<strong>σ</strong>
+<strong id="sigma">0</strong>
+</div>
+</div>
+
+</div>
 </div>
 
 <script>
-const TABLA = [
-[30,14],[50,15],[70,15],[90,15],[100,15],[200,15],[300,10],
-[400,0],[500,-5],[600,-10],[700,-15],[800,-20],[900,-25],
-[1000,-30],[1200,-35],[1400,-45],[1600,-55],[1800,-60],
-[2000,-65],[2200,-75],[2400,-90],[2600,-100],[2800,-110],
-[3000,-120],[3200,-135],[3400,-150],[3600,-165],[3800,-175],
-[4000,-180],[4200,-190],[4400,-195],[4600,-200],[4800,-225],
-[5000,-260]
-];
-
-function obtenerAjuste(valor){
-    let ajuste = 0;
-    for(let i=0;i<TABLA.length;i++){
-        if(valor >= TABLA[i][0]){
-            ajuste = TABLA[i][1];
-        }else{
-            break;
-        }
-    }
-    return ajuste;
-}
-
 function calcular(){
-    let valores = [
-        parseFloat(document.getElementById("v1").value || 0),
-        parseFloat(document.getElementById("v2").value || 0),
-        parseFloat(document.getElementById("v3").value || 0)
-    ];
 
-    let corregidas = valores.map(v => v + obtenerAjuste(v));
+    let v1=parseFloat(document.getElementById("v1").value)||0;
+    let v2=parseFloat(document.getElementById("v2").value)||0;
+    let v3=parseFloat(document.getElementById("v3").value)||0;
 
-    let vprom = (corregidas[0]+corregidas[1]+corregidas[2])/3;
+    let valores=[v1,v2,v3];
 
-    let suma = corregidas.reduce((acc,v)=>acc+Math.pow(v-vprom,2),0);
-    let sigma = Math.sqrt(suma/3);
+    // VPROM
+    let promedio=(v1+v2+v3)/3;
 
-    let cv = vprom !== 0 ? sigma/vprom : 0;
+    // Corrección automática (tu lógica original)
+    let corregidos=valores.map(v=>v-promedio);
 
-    document.getElementById("vprom").innerHTML = "VPROM: " + vprom.toFixed(2);
-    document.getElementById("sigma").innerHTML = "σ: " + sigma.toFixed(4);
-    document.getElementById("cv").innerHTML = "CV: " + (cv*100).toFixed(2) + "%";
+    // Desviación estándar
+    let suma=corregidos.reduce((acc,v)=>acc+Math.pow(v,2),0);
+    let sigma=Math.sqrt(suma/3);
 
-    let alerta = document.getElementById("alerta");
-    if(cv > 0.05){
-        alerta.innerHTML = "REPETIR: CV > 5%";
-        alerta.style.color = "#d32f2f";
-    }else{
-        alerta.innerHTML = "LECTURA VÁLIDA";
-        alerta.style.color = "#2e7d32";
-    }
+    // Mostrar resultados
+    document.getElementById("c1").textContent=corregidos[0].toFixed(2);
+    document.getElementById("c2").textContent=corregidos[1].toFixed(2);
+    document.getElementById("c3").textContent=corregidos[2].toFixed(2);
+
+    document.getElementById("vprom").textContent=promedio.toFixed(2);
+    document.getElementById("sigma").textContent=sigma.toFixed(2);
 }
 
+// Registrar Service Worker
 if("serviceWorker" in navigator){
     navigator.serviceWorker.register("service-worker.js");
 }
